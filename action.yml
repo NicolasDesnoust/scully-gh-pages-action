@@ -19,6 +19,10 @@ inputs:
     description: "Additional arguments that get passed to `npm run scully`."
     required: false
     default: ""
+  working-directory:
+    description: "The working directory from which commands should be executed."
+    required: false
+    default: "./"
 runs:
   using: "node16"
   main: "./dist/index.js"

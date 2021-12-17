@@ -4,8 +4,8 @@ import * as github from '@actions/github';
 import * as io from '@actions/io';
 import * as ioUtil from '@actions/io/lib/io-util';
 import * as lockfile from '@yarnpkg/lockfile';
-import semver from 'semver';
 import { readFileSync } from 'fs';
+import semver from 'semver';
 
 const DEFAULT_DEPLOY_BRANCH = 'master';
 
@@ -27,6 +27,10 @@ async function run(): Promise<void> {
       console.log('Nothing to deploy.');
       return;
     }
+
+    const workingDirectory = core.getInput('working-directory').trim();
+    await exec.exec(`cd ${workingDirectory}`);
+    console.log(`Running commands from directory '${workingDirectory}'.`);
 
     const pkgManager = (await ioUtil.exists('./yarn.lock')) ? 'yarn' : 'npm';
     const installCmd = pkgManager === 'yarn' ? 'install --frozen-lockfile' : 'ci';
