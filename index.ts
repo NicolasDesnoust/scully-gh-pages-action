@@ -28,14 +28,13 @@ async function run(): Promise<void> {
       return;
     }
 
-    const workingDirectory = core.getInput('working-directory').trim();
-    await exec.exec(`cd ${workingDirectory}`);
+    const workingDirectory = core.getInput('working-directory').trim() || '.';
     console.log(`Running commands from directory '${workingDirectory}'.`);
 
-    const pkgManager = (await ioUtil.exists('./yarn.lock')) ? 'yarn' : 'npm';
+    const pkgManager = (await ioUtil.exists(`${workingDirectory}/yarn.lock`)) ? 'yarn' : 'npm';
     const installCmd = pkgManager === 'yarn' ? 'install --frozen-lockfile' : 'ci';
     console.log(`Installing your site's dependencies using ${pkgManager}.`);
-    await exec.exec(`${pkgManager} ${installCmd}`);
+    await exec.exec(`${pkgManager} ${installCmd}`, [], { cwd: workingDirectory });
     console.log('Finished installing dependencies.');
 
     let buildArgs = core.getInput('build-args').trim();
@@ -53,14 +52,14 @@ async function run(): Promise<void> {
 
     console.log('Ready to build your Scully site!');
     console.log(`Building with: ${pkgManager} run build ${buildArgs}`);
-    await exec.exec(`${pkgManager} run build ${buildArgs}`, []);
+    await exec.exec(`${pkgManager} run build ${buildArgs}`, [], { cwd: workingDirectory });
     console.log('Finished building your site.');
 
     // determine the scully version
     let scullyVersion;
     if (pkgManager === 'yarn') {
-      console.log("Determine Scully version from './yarn.lock'.");
-      const yarnLockRaw = readFileSync('./yarn.lock', 'utf8');
+      console.log(`Determining Scully version from '${workingDirectory}/yarn.lock'.`);
+      const yarnLockRaw = readFileSync(`${workingDirectory}/yarn.lock`, 'utf8');
       const yarnLockParsed = lockfile.parse(yarnLockRaw);
       // result contains a list with e.g. "@scullyio/scully@^0.0.85" as key, so we have to find teh matching object key
       const getScullyChildObjectKey = Object.keys(yarnLockParsed.object).filter((p: string) =>
@@ -69,8 +68,8 @@ async function run(): Promise<void> {
       // use the found key to get the version from the object
       scullyVersion = yarnLockParsed.object[getScullyChildObjectKey[0]].version;
     } else {
-      console.log("Determine Scully version from './package-lock.json'.");
-      const packageLockJsonRaw = readFileSync('./package-lock.json', 'utf8');
+      console.log(`Determine Scully version from '${workingDirectory}/package-lock.json'.`);
+      const packageLockJsonRaw = readFileSync(`${workingDirectory}/package-lock.json`, 'utf8');
       const packageLockJsonParsed = JSON.parse(packageLockJsonRaw);
       scullyVersion = packageLockJsonParsed.dependencies['@scullyio/scully'].version;
     }
@@ -82,13 +81,15 @@ async function run(): Promise<void> {
       scullyArgs = `--nw ${scullyArgs}`;
     }
 
-    await exec.exec(`${pkgManager} run scully -- ${scullyArgs}`, []);
+    await exec.exec(`${pkgManager} run scully -- ${scullyArgs}`, [], { cwd: workingDirectory });
     console.log('Finished Scullying your site.');
 
-    const cnameExists = await ioUtil.exists('./CNAME');
+    const cnameExists = await ioUtil.exists(`${workingDirectory}/CNAME`);
     if (cnameExists) {
       console.log('Copying CNAME over.');
-      await io.cp('./CNAME', './dist/static/CNAME', { force: true });
+      await io.cp(`${workingDirectory}/CNAME`, `${workingDirectory}/dist/static/CNAME`, {
+        force: true,
+      });
       console.log('Finished copying CNAME.');
     }
 
@@ -97,19 +98,19 @@ async function run(): Promise<void> {
     console.log('Ready to deploy your new shiny site!');
     console.log(`Deploying to repo: ${repo} and branch: ${deployBranch}`);
     console.log('You can configure the deploy branch by setting the `deploy-branch` input for this action.');
-    await exec.exec(`git init`, [], { cwd: './dist/static' });
+    await exec.exec(`git init`, [], { cwd: `${workingDirectory}/dist/static` });
     await exec.exec(`git config user.name`, [github.context.actor], {
-      cwd: './dist/static',
+      cwd: `${workingDirectory}/dist/static`,
     });
     await exec.exec(`git config user.email`, [`${github.context.actor}@users.noreply.github.com`], {
-      cwd: './dist/static',
+      cwd: `${workingDirectory}/dist/static`,
     });
-    await exec.exec(`git add`, ['.'], { cwd: './dist/static' });
+    await exec.exec(`git add`, ['.'], { cwd: `${workingDirectory}/dist/static` });
     await exec.exec(`git commit`, ['-m', `deployed via Scully Publish Action 🎩 for ${github.context.sha}`], {
-      cwd: './dist/static',
+      cwd: `${workingDirectory}/dist/static`,
     });
     await exec.exec(`git push`, ['-f', repoURL, `master:${deployBranch}`], {
-      cwd: './dist/static',
+      cwd: `${workingDirectory}/dist/static`,
     });
     console.log('Finished deploying your site.');
 

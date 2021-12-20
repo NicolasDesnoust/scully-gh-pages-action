@@ -1,28 +1,28 @@
-name: "Scully Publish (temporary)"
-description: "This version of Scully Publish is for my personal projects. Please use the one of cmgriffing instead."
+name: 'Scully Publish (temporary)'
+description: 'This version of Scully Publish is for my personal projects. Please use the one of cmgriffing instead.'
 branding:
-  icon: "book-open"
-  color: "red"
+  icon: 'book-open'
+  color: 'red'
 inputs:
   access-token:
-    description: "A personal access token needed to push your site after it has been built."
+    description: 'A personal access token needed to push your site after it has been built.'
     required: true
   deploy-branch:
-    description: "The branch expected by GitHub to have the static files needed for your site."
+    description: 'The branch expected by GitHub to have the static files needed for your site.'
     required: false
-    default: "master"
+    default: 'master'
   build-args:
-    description: "Additional arguments that get passed to `npm run build`."
+    description: 'Additional arguments that get passed to `npm run build`.'
     required: false
-    default: ""
+    default: ''
   scully-args:
-    description: "Additional arguments that get passed to `npm run scully`."
+    description: 'Additional arguments that get passed to `npm run scully`.'
     required: false
-    default: ""
+    default: ''
   working-directory:
-    description: "The working directory from which commands should be executed."
+    description: 'The working directory from which commands should be executed.'
     required: false
-    default: "./"
+    default: '.'
 runs:
-  using: "node16"
-  main: "./dist/index.js"
+  using: 'node16'
+  main: './dist/index.js'
