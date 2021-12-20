@@ -1,5 +1,5 @@
 name: "Scully Publish (temporary)"
-description: "Build and deploy your Scully site to GitHub Pages. This version of Scully Publish is for my personal projects. Please use the one of cmgriffing instead."
+description: "This version of Scully Publish is for my personal projects. Please use the one of cmgriffing instead."
 branding:
   icon: "book-open"
   color: "red"
